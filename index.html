@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CAREER-FIT 통합 MVP</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- React & Babel for Standalone Execution -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body { font-family: 'Pretendard', sans-serif; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Custom Animations */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        .slide-up { animation: slideUp 0.4s ease-out forwards; }
+        .slide-right { animation: slideRight 0.4s ease-out forwards; }
+        .zoom-in { animation: zoomIn 0.4s ease-out forwards; }
+    </style>
+</head>
+<body class="bg-gray-100 flex justify-center items-center min-h-screen">
+
+    <div id="root" class="w-full h-full flex justify-center items-center p-4"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // --- [Mock Data] ---
+        const INITIAL_SHORTS = [
+            {
+                id: 1,
+                company: "토스 (Toss)",
+                role: "Product Owner",
+                description: "토스의 자유로운 점심시간! 저희 팀은 오늘 법카로 오마카세 왔습니다 🍣 실력만 있다면 모든 걸 지원하는 토스에서 함께할 PO를 찾습니다.",
+                tags: ["#자율출퇴근", "#무제한법카", "#최고의동료"],
+                bgImage: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80",
+                likes: 1240,
+                videoId: ""
+            },
+            {
+                id: 2,
+                company: "배달의민족",
+                role: "UX/UI 디자이너",
+                description: "배민다움을 만드는 과정. 송파구에서 가장 일 잘하는 사람들이 모여있는 곳! 1분 오피스 투어 출발합니다 🚀",
+                tags: ["#주35시간", "#우아한형제들", "#디자인"],
+                bgImage: "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&w=800&q=80",
+                likes: 892,
+                videoId: ""
+            },
+            {
+                id: 3,
+                company: "당근마켓",
+                role: "콘텐츠 마케터",
+                description: "우리 동네를 연결하는 따뜻한 서비스, 당근마켓 개발팀의 일상입니다. 판교 오피스 구경하고 가세요 🥕",
+                tags: ["#자율복장", "#수평적문화", "#당근"],
+                bgImage: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=800&q=80",
+                likes: 2105,
+                videoId: ""
+            },
+            {
+                id: 4,
+                company: "무신사",
+                role: "패션 MD",
+                description: "패션을 사랑하는 사람들이 모인 무신사! 트렌드를 이끄는 MD팀의 치열하고 즐거운 아이디어 회의 현장 👕",
+                tags: ["#패션지원금", "#트렌디", "#자율근무"],
+                bgImage: "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=800&q=80",
+                likes: 1540,
+                videoId: ""
+            },
+            {
+                id: 5,
+                company: "넷플릭스 코리아",
+                role: "영상 편집자 / PD",
+                description: "최고의 콘텐츠가 탄생하는 곳, 넷플릭스 서울 오피스 휴게공간입니다. 엔터테인먼트를 사랑한다면 합류하세요 🎬",
+                tags: ["#글로벌", "#최고대우", "#무제한휴가"],
+                bgImage: "https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=800&q=80",
+                likes: 3820,
+                videoId: ""
+            }
+        ];
+
+        const MOCK_QUESTS = [
+            {
+                id: 101,
+                company: "배달의민족",
+                title: "배민 B마트 주문 화면 UI/UX 개선안 도출",
+                bounty: 500000,
+                deadline: "D-3",
+                difficulty: "Medium",
+                tags: ["UX/UI", "Figma"],
+                description: "현재 B마트 장바구니 화면의 이탈률을 줄이기 위한 창의적인 UI 개선 아이디어를 스케치 또는 Figma로 제출해 주세요. 우수자 1명에게 50만 원의 바운티와 1차 면접 프리패스 권한을 드립니다.",
+                applied: false
+            },
+            {
+                id: 102,
+                company: "토스",
+                title: "새로운 금융 탭 트래픽 증대 전략",
+                bounty: 1000000,
+                deadline: "D-7",
+                difficulty: "Hard",
+                tags: ["사업기획", "데이터분석"],
+                description: "토스의 신규 서비스 트래픽 증대를 위한 전략을 수립해주세요. 논리적 근거와 데이터 활용 능력을 중점적으로 평가합니다. (최대 3장 분량)",
+                applied: false
+            },
+            {
+                id: 103,
+                company: "무신사",
+                title: "블랙프라이데이 프로모션 기획안 (1장)",
+                bounty: 300000,
+                deadline: "D-1",
+                difficulty: "Easy",
+                tags: ["콘텐츠마케팅", "이벤트기획"],
+                description: "무신사 블랙프라이데이의 핵심 카피라이팅과 메인 이벤트 아이디어를 1장짜리 기획안으로 제출해 주세요. 기발함과 타겟 적합성을 봅니다.",
+                applied: false
+            }
+        ];
+
+        // --- [Main Application Component] ---
+        function App() {
+            const [activeTab, setActiveTab] = useState('shorts'); 
+            const [shortsList, setShortsList] = useState(INITIAL_SHORTS);
+            const [toastMessage, setToastMessage] = useState(null);
+
+            const showToast = (message) => {
+                setToastMessage(message);
+                setTimeout(() => setToastMessage(null), 3000);
+            };
+
+            const handleAddNewShort = (newShortData) => {
+                const newShort = {
+                    id: Date.now(),
+                    company: newShortData.company,
+                    role: newShortData.role,
+                    description: newShortData.description,
+                    tags: newShortData.tags.split(',').map(tag => `#${tag.trim()}`),
+                    videoId: newShortData.videoId, 
+                    likes: 0
+                };
+                setShortsList([newShort, ...shortsList]);
+                setActiveTab('shorts');
+                showToast('새 공고가 성공적으로 등록되었습니다!');
+            };
+
+            return (
+                <div className="w-full max-w-[400px] h-[800px] bg-gray-950 relative overflow-hidden shadow-2xl rounded-[40px] border-[10px] border-gray-800 flex flex-col text-white">
+                    
+                    {/* 상단 상태바 */}
+                    <div className="absolute top-0 w-full h-7 flex justify-between items-center px-6 z-50 text-xs font-semibold text-white/90 mix-blend-difference">
+                        <span>9:41</span>
+                        <div className="flex space-x-2">
+                            <i className="fa-solid fa-signal"></i>
+                            <i className="fa-solid fa-wifi"></i>
+                            <i className="fa-solid fa-battery-full"></i>
+                        </div>
+                    </div>
+
+                    {/* 메인 콘텐츠 영역 */}
+                    <div className="flex-1 overflow-hidden relative bg-[#0F172A]">
+                        {activeTab === 'shorts' && <ShortsFeed shorts={shortsList} showToast={showToast} />}
+                        {activeTab === 'quests' && <QuestsView showToast={showToast} />}
+                        {activeTab === 'create' && <CreatePostView onPost={handleAddNewShort} showToast={showToast} />}
+                        {activeTab === 'profile' && <ProfileView showToast={showToast} />}
+                    </div>
+
+                    {/* 하단 네비게이션 바 */}
+                    <nav className="h-[84px] bg-gray-900 border-t border-gray-800 flex justify-around items-center px-2 pb-4 z-50">
+                        <NavItem iconClass="fa-solid fa-briefcase" label="피드" isActive={activeTab === 'shorts'} onClick={() => setActiveTab('shorts')} />
+                        <NavItem iconClass="fa-solid fa-crosshairs" label="퀘스트" isActive={activeTab === 'quests'} onClick={() => setActiveTab('quests')} />
+                        <NavItem iconClass="fa-solid fa-circle-plus" label="공고 등록" isActive={activeTab === 'create'} onClick={() => setActiveTab('create')} />
+                        <NavItem iconClass="fa-solid fa-user" label="내 정보" isActive={activeTab === 'profile'} onClick={() => setActiveTab('profile')} />
+                    </nav>
+
+                    {/* 전역 토스트 알림 */}
+                    {toastMessage && (
+                        <div className="absolute top-12 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-6 py-3 rounded-full shadow-lg z-50 flex items-center space-x-2 slide-up">
+                            <i class="fa-solid fa-circle-check text-green-400"></i>
+                            <span className="text-sm font-medium whitespace-nowrap">{toastMessage}</span>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // --- [Components] ---
+
+        function NavItem({ iconClass, label, isActive, onClick }) {
+            return (
+                <button 
+                    onClick={onClick}
+                    className={`flex flex-col items-center justify-center w-16 h-full space-y-1 transition-colors ${isActive ? 'text-indigo-400' : 'text-gray-500 hover:text-gray-300'}`}
+                >
+                    <i class={`${iconClass} text-2xl ${isActive ? 'text-indigo-400' : ''}`}></i>
+                    <span className="text-[10px] font-bold">{label}</span>
+                </button>
+            );
+        }
+
+        function ShortsFeed({ shorts, showToast }) {
+            const containerRef = useRef(null);
+            // 무한 스크롤을 위해 보여줄 쇼츠 리스트를 별도 상태로 관리합니다.
+            const [displayShorts, setDisplayShorts] = useState(shorts);
+
+            // 새로운 공고가 등록되거나 초기 데이터가 바뀔 때 리셋
+            useEffect(() => { 
+                setDisplayShorts(shorts);
+                if (containerRef.current) containerRef.current.scrollTop = 0; 
+            }, [shorts]);
+
+            // 스크롤이 맨 밑에 닿기 직전에 기존 5개 데이터를 뒤에 계속 이어붙이는 함수
+            const handleScroll = (e) => {
+                const { scrollTop, clientHeight, scrollHeight } = e.target;
+                if (scrollHeight - scrollTop <= clientHeight + 100) {
+                    setDisplayShorts(prev => [...prev, ...shorts]);
+                }
+            };
+
+            return (
+                <div 
+                    ref={containerRef} 
+                    onScroll={handleScroll}
+                    className="h-full w-full overflow-y-scroll snap-y snap-mandatory scroll-smooth no-scrollbar relative"
+                >
+                    {displayShorts.map((short, index) => <ShortItem key={`${short.id}-${index}`} data={short} showToast={showToast} />)}
+                </div>
+            );
+        }
+
+        function ShortItem({ data, showToast }) {
+            const [isLiked, setIsLiked] = useState(false);
+            const bgStyle = data.videoId 
+                ? { backgroundImage: `url(https://img.youtube.com/vi/${data.videoId}/hqdefault.jpg)` }
+                : { backgroundImage: `url(${data.bgImage})` };
+
+            return (
+                <div className="h-full w-full snap-start relative bg-black flex justify-center items-center">
+                    <div className="absolute inset-0 bg-cover bg-center opacity-70 scale-105 transition-transform duration-[10000ms] ease-linear" style={bgStyle} />
+                    {data.videoId && (
+                        <div className="absolute z-0 w-16 h-16 bg-black/40 backdrop-blur-md rounded-full border border-white/20 flex items-center justify-center shadow-2xl">
+                            <i class="fa-solid fa-play text-white text-2xl ml-1 opacity-90"></i>
+                        </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/90" />
+                    <div className="absolute right-4 bottom-36 flex flex-col items-center space-y-6 z-10">
+                        <button onClick={() => setIsLiked(!isLiked)} className="flex flex-col items-center space-y-1">
+                            <div className={`p-3 rounded-full bg-gray-800/60 backdrop-blur-sm transition-all ${isLiked ? 'text-red-500' : 'text-white'}`}>
+                                <i class="fa-solid fa-heart text-2xl"></i>
+                            </div>
+                            <span className="text-xs font-semibold drop-shadow-md">{data.likes + (isLiked ? 1 : 0)}</span>
+                        </button>
+                        <button className="flex flex-col items-center space-y-1" onClick={() => showToast('공유 링크가 복사되었습니다.')}>
+                            <div className="p-3 rounded-full bg-gray-800/60 backdrop-blur-sm text-white">
+                                <i class="fa-solid fa-share-nodes text-2xl"></i>
+                            </div>
+                            <span className="text-xs font-semibold drop-shadow-md">공유</span>
+                        </button>
+                    </div>
+                    <div className="absolute bottom-0 left-0 w-full p-6 pb-20 z-10">
+                        <div className="flex items-center space-x-3 mb-3">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center font-bold text-white shadow-lg shrink-0">
+                                {data.company.charAt(0)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <h3 className="font-bold text-lg leading-tight drop-shadow-md truncate">{data.company}</h3>
+                                <p className="text-indigo-300 text-sm font-semibold drop-shadow-md truncate">{data.role}</p>
+                            </div>
+                            <button className="px-4 py-1.5 bg-white text-black text-sm font-bold rounded-full hover:bg-gray-200 shrink-0" onClick={() => showToast('기업을 팔로우했습니다!')}>
+                                팔로우
+                            </button>
+                        </div>
+                        <p className="text-sm text-white/90 mb-3 line-clamp-2 drop-shadow-md leading-relaxed">{data.description}</p>
+                        <div className="flex flex-wrap gap-2 mb-4">
+                            {data.tags.map(tag => (
+                                <span key={tag} className="text-xs font-semibold bg-black/40 backdrop-blur-md px-2 py-1 rounded-md text-gray-200 border border-gray-600/50">
+                                    {tag}
+                                </span>
+                            ))}
+                        </div>
+                        <button className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-bold text-white shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-2" onClick={() => showToast('익명 프로필로 간편 지원이 완료되었습니다!')}>
+                            <i class="fa-solid fa-bolt"></i> 원클릭 지원하기
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        // 2. 바운티 퀘스트 뷰 (완전 활성화)
+        function QuestsView({ showToast }) {
+            const [selectedQuest, setSelectedQuest] = useState(null);
+            const [quests, setQuests] = useState(MOCK_QUESTS);
+
+            const handleApply = (id) => {
+                setQuests(quests.map(q => q.id === id ? { ...q, applied: true } : q));
+                showToast('퀘스트에 참가했습니다! 과제 제출창이 열립니다.');
+                setSelectedQuest(null);
+            };
+
+            return (
+                <div className="h-full bg-[#0F172A] flex flex-col pt-8">
+                    <div className="p-6 pb-4 bg-[#0F172A] z-10">
+                        <h1 className="text-2xl font-black mb-1">바운티 퀘스트 🎯</h1>
+                        <p className="text-gray-400 text-sm">실무 과제를 풀고 상금과 면접 기회를 획득하세요.</p>
+                        <div className="mt-4 relative">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"></i>
+                            <input type="text" placeholder="직무나 기술스택으로 검색" className="w-full bg-gray-800 text-white rounded-xl py-3 pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+                        </div>
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar pb-24">
+                        {quests.map(quest => (
+                            <div key={quest.id} onClick={() => setSelectedQuest(quest)} className="bg-gray-800/80 border border-gray-700 rounded-2xl p-5 cursor-pointer hover:border-indigo-500 transition-colors relative overflow-hidden">
+                                {quest.applied && (
+                                    <div className="absolute top-0 right-0 bg-green-500 text-black text-[10px] font-bold px-3 py-1 rounded-bl-lg">참가 중</div>
+                                )}
+                                <div className="flex justify-between items-start mb-2">
+                                    <span className="text-sm font-semibold text-gray-400">{quest.company}</span>
+                                    <span className="text-xs font-bold bg-indigo-500/20 text-indigo-300 px-2 py-1 rounded text-red">{quest.deadline}</span>
+                                </div>
+                                <h3 className="font-bold text-lg mb-3 pr-8 leading-tight">{quest.title}</h3>
+                                <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-700/50">
+                                    <div className="flex gap-2">
+                                        {quest.tags.map(tag => <span key={tag} className="text-xs text-gray-400 bg-gray-900 px-2 py-1 rounded">{tag}</span>)}
+                                    </div>
+                                    <span className="font-black text-indigo-400">₩{quest.bounty.toLocaleString()}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    
+                    {/* 퀘스트 상세 모달 */}
+                    {selectedQuest && (
+                        <div className="absolute inset-0 bg-black/80 z-50 flex items-end fade-in">
+                            <div className="bg-gray-900 w-full h-[85%] rounded-t-[32px] flex flex-col slide-up">
+                                <div className="p-4 flex justify-end pb-0">
+                                    <button onClick={() => setSelectedQuest(null)} className="p-2 bg-gray-800 rounded-full text-gray-400 hover:text-white">
+                                        <i class="fa-solid fa-xmark text-lg"></i>
+                                    </button>
+                                </div>
+                                <div className="p-6 pt-2 overflow-y-auto flex-1 no-scrollbar">
+                                    <div className="flex items-center space-x-3 mb-4">
+                                        <div className="w-12 h-12 bg-indigo-600 rounded-full flex justify-center items-center font-bold text-xl">{selectedQuest.company.charAt(0)}</div>
+                                        <div>
+                                            <h2 className="text-gray-400 font-semibold">{selectedQuest.company}</h2>
+                                            <h1 className="text-xl font-black">{selectedQuest.title}</h1>
+                                        </div>
+                                    </div>
+                                    <div className="bg-gray-800 rounded-xl p-4 flex justify-between items-center mb-6">
+                                        <div>
+                                            <p className="text-xs text-gray-400 mb-1">우승 바운티 (1명)</p>
+                                            <p className="text-2xl font-black text-indigo-400">₩{selectedQuest.bounty.toLocaleString()}</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-xs text-gray-400 mb-1">난이도 / 마감</p>
+                                            <p className="font-bold">{selectedQuest.difficulty} / {selectedQuest.deadline}</p>
+                                        </div>
+                                    </div>
+                                    <h3 className="font-bold text-lg mb-2">퀘스트 상세 설명</h3>
+                                    <p className="text-gray-300 text-sm leading-relaxed mb-6">{selectedQuest.description}</p>
+                                </div>
+                                <div className="p-6 bg-gray-900 border-t border-gray-800">
+                                    {selectedQuest.applied ? (
+                                        <button disabled className="w-full py-4 bg-gray-700 text-gray-400 rounded-xl font-bold flex justify-center items-center gap-2 cursor-not-allowed">
+                                            <i class="fa-solid fa-circle-check"></i> 참가 중인 퀘스트입니다
+                                        </button>
+                                    ) : (
+                                        <button onClick={() => handleApply(selectedQuest.id)} className="w-full py-4 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-600/30 transition-all text-lg">
+                                            과제 수락하고 바운티 도전하기
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // 3. 기업용 공고 등록 탭 (완전 활성화)
+        function CreatePostView({ onPost, showToast }) {
+            const [mode, setMode] = useState('select'); 
+            const [formData, setFormData] = useState({ company: '', role: '', youtubeUrl: '', description: '', tags: '' });
+
+            const extractVideoId = (url) => {
+                if (!url) return '';
+                const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/;
+                const match = url.match(regExp);
+                return (match && match[2].length === 11) ? match[2] : '';
+            };
+
+            const handleAIGenerate = (e) => {
+                e.preventDefault();
+                setMode('generating');
+                setTimeout(() => {
+                    setFormData({
+                        company: '스타트업 팩토리',
+                        role: '콘텐츠 마케터',
+                        youtubeUrl: 'https://youtube.com/shorts/gE7dhiEeVPg', 
+                        description: 'AI가 작성해준 맞춤형 어필 포인트입니다! 조직문화와 혜택을 분석해 가장 트렌디한 문구로 자동 정리했습니다. 🔥',
+                        tags: '자율출퇴근, 성과급, 트렌디'
+                    });
+                    setMode('manual');
+                }, 3000);
+            };
+
+            const handleSubmitFinal = (e) => {
+                e.preventDefault();
+                const videoId = extractVideoId(formData.youtubeUrl);
+                if(!videoId) { showToast('유효한 유튜브 링크를 입력하세요', 'error'); return; }
+                onPost({ ...formData, videoId });
+                setFormData({ company: '', role: '', youtubeUrl: '', description: '', tags: '' });
+                setMode('select');
+            };
+
+            return (
+                <div className="h-full bg-gray-50 flex flex-col text-gray-900 overflow-y-auto no-scrollbar pt-10">
+                    <div className="p-6">
+                        {mode === 'select' && (
+                            <div className="slide-up pb-20">
+                                <h1 className="text-2xl font-black mb-2">공고 올리기 🚀</h1>
+                                <p className="text-gray-500 text-sm mb-8">어떤 방식으로 채용 쇼츠를 등록할까요?</p>
+                                <div className="space-y-4">
+                                    <button onClick={() => setMode('auto_form')} className="w-full bg-gradient-to-br from-indigo-600 to-purple-700 p-6 rounded-2xl shadow-lg text-left relative overflow-hidden group">
+                                        <div className="relative z-10 text-white">
+                                            <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center mb-4">
+                                                <i class="fa-solid fa-wand-magic-sparkles text-xl"></i>
+                                            </div>
+                                            <h2 className="text-lg font-bold mb-1 flex items-center gap-2">AI 자동 생성 <span className="bg-yellow-400 text-yellow-900 text-[10px] px-1.5 py-0.5 rounded font-black">추천</span></h2>
+                                            <p className="text-xs text-indigo-100">질문에 답하면 AI가 대본과 영상을 완성합니다.</p>
+                                        </div>
+                                    </button>
+                                    <button onClick={() => setMode('manual')} className="w-full bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-left hover:border-indigo-500 transition-colors">
+                                        <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-4">
+                                            <i class="fa-brands fa-youtube text-xl text-red-500"></i>
+                                        </div>
+                                        <h2 className="text-lg font-bold mb-1">유튜브 링크로 등록</h2>
+                                        <p className="text-xs text-gray-500">기존에 만든 영상이 있다면 링크만 붙여넣으세요.</p>
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                        {mode === 'auto_form' && (
+                            <div className="slide-right pb-20">
+                                <button onClick={() => setMode('select')} className="text-gray-500 mb-6 flex items-center gap-1 text-sm font-semibold"><i class="fa-solid fa-arrow-left"></i> 뒤로</button>
+                                <h1 className="text-xl font-black mb-1">AI 쇼츠 인터뷰</h1>
+                                <p className="text-gray-500 text-xs mb-6">우리 회사에 대해 3가지만 알려주세요.</p>
+                                <form onSubmit={handleAIGenerate} className="space-y-5">
+                                    <div><label className="block text-xs font-bold text-gray-800 mb-2">1. 조직 문화를 한 단어로?</label><input type="text" placeholder="예: 수평적이고 자유로운 분위기" className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-indigo-500" required /></div>
+                                    <div><label className="block text-xs font-bold text-gray-800 mb-2">2. 중요하게 보는 역량은?</label><input type="text" placeholder="예: 자기주도적 문제 해결" className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-indigo-500" required /></div>
+                                    <div><label className="block text-xs font-bold text-gray-800 mb-2">3. 핵심 복지 한 가지?</label><input type="text" placeholder="예: 무제한 점심 식대 지원" className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-indigo-500" required /></div>
+                                    <button type="submit" className="w-full py-4 mt-4 bg-gray-900 text-white rounded-xl font-bold flex justify-center items-center gap-2 shadow-lg"><i class="fa-solid fa-video"></i> AI 생성 시작하기</button>
+                                </form>
+                            </div>
+                        )}
+                        {mode === 'generating' && (
+                            <div className="h-[60vh] flex flex-col items-center justify-center zoom-in text-center">
+                                <i class="fa-solid fa-spinner fa-spin text-4xl text-indigo-600 mb-4"></i>
+                                <h2 className="text-lg font-black text-gray-900 mb-2">AI가 영상을 제작 중입니다...</h2>
+                                <p className="text-xs text-gray-500 leading-relaxed">대본을 작성하고 유튜브에<br/>업로드하고 있습니다.</p>
+                            </div>
+                        )}
+                        {mode === 'manual' && (
+                            <div className="slide-right pb-24">
+                                <button onClick={() => setMode('select')} className="text-gray-500 mb-6 flex items-center gap-1 text-sm font-semibold"><i class="fa-solid fa-arrow-left"></i> 취소</button>
+                                <h1 className="text-xl font-black mb-1">공고 최종 확인</h1>
+                                <p className="text-gray-500 text-xs mb-6">입력된 내용을 확인하고 등록해주세요.</p>
+                                <form onSubmit={handleSubmitFinal} className="space-y-4">
+                                    <div><label className="block text-xs font-bold text-gray-800 mb-1">유튜브 쇼츠 링크</label><input type="url" value={formData.youtubeUrl} onChange={e => setFormData({...formData, youtubeUrl: e.target.value})} placeholder="https://youtube.com/shorts/..." className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-indigo-500" required /></div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div><label className="block text-xs font-bold text-gray-800 mb-1">기업명</label><input type="text" value={formData.company} onChange={e => setFormData({...formData, company: e.target.value})} className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-indigo-500" required /></div>
+                                        <div><label className="block text-xs font-bold text-gray-800 mb-1">채용 직무</label><input type="text" value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-indigo-500" required /></div>
+                                    </div>
+                                    <div><label className="block text-xs font-bold text-gray-800 mb-1">어필 포인트</label><textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} rows="3" className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-indigo-500 resize-none" required></textarea></div>
+                                    <div><label className="block text-xs font-bold text-gray-800 mb-1">태그 (쉼표 구분)</label><input type="text" value={formData.tags} onChange={e => setFormData({...formData, tags: e.target.value})} placeholder="자율출퇴근, 점심제공" className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-indigo-500" required /></div>
+                                    <button type="submit" className="w-full py-4 mt-6 bg-indigo-600 text-white rounded-xl font-bold flex justify-center items-center shadow-lg shadow-indigo-600/30">공고 등록하고 피드 확인하기</button>
+                                </form>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        // 4. 구직자 프로필 뷰 (AI 딥터뷰 기능 완벽 복원)
+        function ProfileView({ showToast }) {
+            const [step, setStep] = useState('initial'); 
+            const [youtubeUrl, setYoutubeUrl] = useState('');
+            const [videoId, setVideoId] = useState('');
+            const [answer, setAnswer] = useState('');
+            const [basicInfo, setBasicInfo] = useState({ age: '', gender: '', experience: '', jobRole: '' });
+            
+            const profileImgUrl = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80";
+
+            const extractVideoId = (url) => {
+                if (!url) return '';
+                const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/;
+                const match = url.match(regExp);
+                return (match && match[2].length === 11) ? match[2] : '';
+            };
+
+            const handleManualSubmit = (e) => {
+                e.preventDefault();
+                const extractedId = extractVideoId(youtubeUrl);
+                if(extractedId) {
+                    setVideoId(extractedId);
+                    setStep('result');
+                    showToast('1분 PR 영상이 성공적으로 등록되었습니다.');
+                } else {
+                    showToast('올바른 유튜브 링크를 입력해주세요.', 'error');
+                }
+            };
+
+            const handleBasicInfoSubmit = (e) => { e.preventDefault(); setStep('ai_chat'); };
+
+            const handleAiSubmit = (e) => {
+                e.preventDefault();
+                if (!answer.trim()) return;
+                setStep('analyzing');
+                setTimeout(() => {
+                    setVideoId('gE7dhiEeVPg'); 
+                    setStep('result');
+                    showToast('AI가 프로필과 PR 영상을 완성했습니다!');
+                }, 3000);
+            };
+
+            return (
+                <div className="h-full bg-[#0F172A] p-6 pt-12 overflow-y-auto no-scrollbar pb-24 relative">
+                    <div className="flex flex-col items-center mb-8 border-b border-gray-800 pb-8">
+                        <div className="relative mb-4">
+                            <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.3)]">
+                                <img src={profileImgUrl} alt="Profile" className="w-full h-full object-cover" />
+                            </div>
+                            <button className="absolute bottom-0 right-0 w-8 h-8 bg-gray-800 border-2 border-[#0F172A] rounded-full flex items-center justify-center text-white hover:bg-gray-700">
+                                <i class="fa-solid fa-camera text-xs"></i>
+                            </button>
+                        </div>
+                        <h2 className="text-2xl font-black mb-1">고성덕</h2>
+                        <p className="text-sm text-indigo-400 font-semibold bg-indigo-500/10 px-3 py-1 rounded-full">UX/UI 디자이너 지망생</p>
+                    </div>
+
+                    {step === 'initial' && (
+                        <div className="bg-gray-800 p-6 rounded-2xl border border-gray-700 text-center fade-in">
+                            <i class="fa-solid fa-bolt text-4xl text-gray-500 mb-4 block"></i>
+                            <h3 className="font-bold text-lg mb-2">PR 영상과 이력서가 비어있어요</h3>
+                            <p className="text-sm text-gray-400 mb-6">텍스트 자소서 대신 나만의 매력을 보여줄<br/>1분 쇼츠 프로필을 등록해 보세요.</p>
+                            <button onClick={() => setStep('select')} className="w-full py-4 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-600/30 text-sm">내 커리어 프로필 완성하기</button>
+                        </div>
+                    )}
+
+                    {step === 'select' && (
+                        <div className="slide-right">
+                            <button onClick={() => setStep('initial')} className="text-gray-400 mb-4 flex items-center gap-1 text-sm font-semibold"><i class="fa-solid fa-arrow-left"></i> 뒤로</button>
+                            <h3 className="font-bold text-lg mb-4">어떻게 프로필을 만들까요?</h3>
+                            <div className="space-y-3">
+                                <button onClick={() => setStep('manual')} className="w-full bg-gray-800 p-5 rounded-2xl border border-gray-700 text-left flex items-center gap-4">
+                                    <div className="w-12 h-12 bg-red-500/10 rounded-xl flex items-center justify-center shrink-0"><i class="fa-brands fa-youtube text-2xl text-red-400"></i></div>
+                                    <div><h4 className="font-bold text-sm text-white mb-1">내 1분 PR 영상 링크 등록</h4><p className="text-xs text-gray-400">직접 찍은 자기소개 유튜브 링크를 넣을게요.</p></div>
+                                </button>
+                                <button onClick={() => setStep('ai_form')} className="w-full bg-gradient-to-br from-indigo-900 to-purple-900 p-5 rounded-2xl border border-indigo-500/50 text-left shadow-lg">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 bg-indigo-500/20 rounded-xl flex items-center justify-center shrink-0"><i class="fa-solid fa-wand-magic-sparkles text-xl text-indigo-300"></i></div>
+                                        <div><h4 className="font-bold text-sm text-white mb-1">AI 딥터뷰로 자동 완성 <span className="bg-yellow-400 text-yellow-900 text-[10px] px-1.5 py-0.5 rounded font-black">추천</span></h4><p className="text-xs text-indigo-200">기본 정보 입력 후 역량 분석과 PR 영상을 한 번에!</p></div>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {step === 'manual' && (
+                        <div className="slide-right">
+                            <button onClick={() => setStep('select')} className="text-gray-400 mb-6 flex items-center gap-1 text-sm font-semibold"><i class="fa-solid fa-arrow-left"></i> 뒤로</button>
+                            <form onSubmit={handleManualSubmit} className="space-y-4">
+                                <div><label className="block text-sm font-bold text-gray-200 mb-2">나의 PR 쇼츠 (유튜브 링크)</label><input type="url" value={youtubeUrl} onChange={(e) => setYoutubeUrl(e.target.value)} placeholder="https://youtube.com/shorts/..." className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-indigo-500" required /></div>
+                                <button type="submit" className="w-full py-4 bg-indigo-600 text-white rounded-xl font-bold text-sm shadow-lg hover:bg-indigo-500">프로필에 등록하기</button>
+                            </form>
+                        </div>
+                    )}
+
+                    {step === 'ai_form' && (
+                        <div className="slide-right pb-20">
+                            <button onClick={() => setStep('select')} className="text-gray-400 mb-6 flex items-center gap-1 text-sm font-semibold"><i class="fa-solid fa-arrow-left"></i> 뒤로</button>
+                            <h1 className="text-xl font-black mb-1">기본 이력 설정</h1>
+                            <p className="text-gray-500 text-xs mb-6">AI가 맞춤형 딥터뷰를 진행할 수 있도록 기초 정보를 알려주세요.</p>
+                            <form onSubmit={handleBasicInfoSubmit} className="space-y-4">
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div><label className="block text-xs font-bold text-gray-400 mb-1">나이</label><input type="number" value={basicInfo.age} onChange={e => setBasicInfo({...basicInfo, age: e.target.value})} placeholder="예: 27" className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-indigo-500" required /></div>
+                                    <div><label className="block text-xs font-bold text-gray-400 mb-1">성별</label><select value={basicInfo.gender} onChange={e => setBasicInfo({...basicInfo, gender: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-indigo-500 appearance-none" required><option value="" disabled>선택</option><option value="male">남성</option><option value="female">여성</option></select></div>
+                                </div>
+                                <div><label className="block text-xs font-bold text-gray-400 mb-1">경력 여부</label><select value={basicInfo.experience} onChange={e => setBasicInfo({...basicInfo, experience: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-indigo-500 appearance-none" required><option value="" disabled>선택</option><option value="new">신입</option><option value="1-3">경력 (1~3년)</option></select></div>
+                                <div><label className="block text-xs font-bold text-gray-400 mb-1">희망 직무</label><input type="text" value={basicInfo.jobRole} onChange={e => setBasicInfo({...basicInfo, jobRole: e.target.value})} placeholder="예: UX/UI 디자이너" className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-indigo-500" required /></div>
+                                <button type="submit" className="w-full py-4 mt-2 bg-indigo-600 text-white rounded-xl font-bold text-sm shadow-lg">입력 완료하고 인터뷰 시작하기</button>
+                            </form>
+                        </div>
+                    )}
+
+                    {step === 'ai_chat' && (
+                        <div className="bg-gray-800 p-5 rounded-2xl border border-gray-700 slide-right">
+                            <button onClick={() => setStep('ai_form')} className="text-gray-400 mb-4 flex items-center gap-1 text-sm font-semibold"><i class="fa-solid fa-arrow-left"></i> 이전으로</button>
+                            <div className="flex items-start gap-3 mb-4 mt-2">
+                                <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center shrink-0 shadow-lg"><i class="fa-solid fa-wand-magic-sparkles text-white text-xs"></i></div>
+                                <div className="bg-gray-700 p-4 rounded-2xl rounded-tl-sm text-sm text-gray-200 leading-relaxed shadow-sm">반갑습니다! 앞서 입력해주신 <strong>{basicInfo.jobRole || '지원 직무'}</strong> 관련 이력을 바탕으로 질문드리겠습니다. 본인의 강점을 가장 잘 보여주는 프로젝트 경험이나 문제 해결 사례를 짧게 들려주세요.</div>
+                            </div>
+                            <form onSubmit={handleAiSubmit} className="mt-2">
+                                <textarea value={answer} onChange={(e) => setAnswer(e.target.value)} placeholder="답변을 입력하면 AI가 역량 뱃지와 PR 영상을 추출해줍니다..." className="w-full bg-gray-900 border border-gray-600 rounded-xl p-3 text-sm text-white outline-none focus:border-indigo-500 resize-none h-24 mb-3" required />
+                                <button type="submit" className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm shadow-lg">답변 제출하고 프로필 완성하기</button>
+                            </form>
+                        </div>
+                    )}
+
+                    {step === 'analyzing' && (
+                        <div className="h-48 flex flex-col items-center justify-center text-center zoom-in">
+                            <i class="fa-solid fa-spinner fa-spin text-4xl text-indigo-400 mb-4"></i>
+                            <h3 className="font-bold text-white mb-2">AI가 프로필을 완성하고 있습니다</h3>
+                            <p className="text-xs text-gray-400">숨겨진 역량을 추출하고,<br/>나만의 매력이 담긴 PR 영상을 생성 중입니다.</p>
+                        </div>
+                    )}
+
+                    {step === 'result' && (
+                        <div className="space-y-6 slide-up">
+                            <div className="bg-gray-800 rounded-2xl border border-gray-700 overflow-hidden">
+                                <div className="p-4 border-b border-gray-700 flex justify-between items-center bg-gray-800/50"><h3 className="font-bold text-sm flex items-center gap-2"><i class="fa-solid fa-video text-pink-400"></i> 나의 1분 PR 쇼츠</h3></div>
+                                <div className="h-48 bg-black relative flex items-center justify-center overflow-hidden">
+                                    <img src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`} alt="My PR Video" className="absolute inset-0 w-full h-full object-cover opacity-60" />
+                                    <div className="relative z-10 w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/30 shadow-xl cursor-pointer hover:bg-white/30 transition"><i class="fa-solid fa-play text-white ml-1"></i></div>
+                                </div>
+                            </div>
+                            <div className="bg-gradient-to-br from-indigo-900 to-purple-900 p-5 rounded-2xl border border-indigo-500/30 shadow-lg">
+                                <h3 className="font-black text-white text-sm flex items-center gap-2 mb-5"><i class="fa-solid fa-wand-magic-sparkles text-indigo-300"></i> 검증된 핵심 역량</h3>
+                                <div className="space-y-3.5">
+                                    <div><div className="flex justify-between text-xs mb-1.5 font-medium"><span className="text-indigo-100">문제 해결력</span><span className="text-indigo-300">Top 10%</span></div><div className="w-full h-1.5 bg-black/40 rounded-full overflow-hidden"><div className="w-[90%] h-full bg-indigo-400 rounded-full"></div></div></div>
+                                    <div><div className="flex justify-between text-xs mb-1.5 font-medium"><span className="text-indigo-100">자기 주도성</span><span className="text-pink-300">Top 5%</span></div><div className="w-full h-1.5 bg-black/40 rounded-full overflow-hidden"><div className="w-[95%] h-full bg-pink-400 rounded-full"></div></div></div>
+                                </div>
+                            </div>
+                            <button onClick={() => setStep('initial')} className="w-full py-3 bg-gray-800 text-gray-400 rounded-xl text-xs font-bold hover:bg-gray-700">프로필 다시 만들기</button>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
