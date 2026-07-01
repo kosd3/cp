@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CAREER-FIT 통합 MVP</title>
+    <title>취업 뽀개기 통합 MVP</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -143,7 +143,6 @@
                 setTimeout(() => setToastMessage(null), 3000);
             };
 
-            // 핵심 기능: 새 공고 등록 시 피드 맨 위로 올리고 탭 이동
             const handleAddNewShort = (newShortData) => {
                 const newShort = {
                     id: Date.now(),
@@ -155,15 +154,14 @@
                     likes: 0
                 };
                 
-                // 새로운 공고를 기존 리스트의 가장 맨 앞(최상단)에 추가합니다.
                 setShortsList([newShort, ...shortsList]);
-                // 즉시 첫 번째 탭(피드)으로 화면을 이동시킵니다.
                 setActiveTab('shorts');
                 showToast('새 공고가 피드 최상단에 성공적으로 등록되었습니다!');
             };
 
             return (
-                <div className="w-full max-w-[400px] h-[800px] bg-gray-950 relative overflow-hidden shadow-2xl rounded-[40px] border-[10px] border-gray-800 flex flex-col text-white">
+                // h-[800px]에서 h-[640px]로 변경 (높이 20% 감소)
+                <div className="w-full max-w-[400px] h-[640px] bg-gray-950 relative overflow-hidden shadow-2xl rounded-[40px] border-[10px] border-gray-800 flex flex-col text-white">
                     
                     {/* 상단 상태바 */}
                     <div className="absolute top-0 w-full h-7 flex justify-between items-center px-6 z-50 text-xs font-semibold text-white/90 mix-blend-difference">
@@ -220,13 +218,11 @@
             const containerRef = useRef(null);
             const [displayShorts, setDisplayShorts] = useState(shorts);
 
-            // 새로운 공고가 추가되거나 초기화될 때 피드를 최상단으로 올림
             useEffect(() => { 
                 setDisplayShorts(shorts);
                 if (containerRef.current) containerRef.current.scrollTop = 0; 
             }, [shorts]);
 
-            // 무한 스크롤 로직: 스크롤이 맨 밑에 닿으면 복사본을 계속 이어붙임
             const handleScroll = (e) => {
                 const { scrollTop, clientHeight, scrollHeight } = e.target;
                 if (scrollHeight - scrollTop <= clientHeight + 100) {
