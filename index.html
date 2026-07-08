@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>취업 뽀개기 통합 MVP</title>
+    <title>취뽀 퀵 MVP</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -160,7 +160,6 @@
             };
 
             return (
-                // h-[800px]에서 h-[640px]로 변경 (높이 20% 감소)
                 <div className="w-full max-w-[400px] h-[640px] bg-gray-950 relative overflow-hidden shadow-2xl rounded-[40px] border-[10px] border-gray-800 flex flex-col text-white">
                     
                     {/* 상단 상태바 */}
@@ -181,7 +180,7 @@
                         {activeTab === 'profile' && <ProfileView showToast={showToast} />}
                     </div>
 
-                    {/* 하단 네비게이션 바 (일정한 크기로 통일) */}
+                    {/* 하단 네비게이션 바 */}
                     <nav className="h-[84px] bg-gray-900 border-t border-gray-800 flex justify-around items-center px-2 pb-4 z-50">
                         <NavItem iconClass="fa-solid fa-briefcase" label="피드" isActive={activeTab === 'shorts'} onClick={() => setActiveTab('shorts')} />
                         <NavItem iconClass="fa-solid fa-crosshairs" label="퀘스트" isActive={activeTab === 'quests'} onClick={() => setActiveTab('quests')} />
@@ -231,13 +230,23 @@
             };
 
             return (
-                <div 
-                    ref={containerRef} 
-                    onScroll={handleScroll}
-                    className="h-full w-full overflow-y-scroll snap-y snap-mandatory scroll-smooth no-scrollbar relative"
-                >
-                    {displayShorts.map((short, index) => <ShortItem key={`${short.id}-${index}`} data={short} showToast={showToast} />)}
-                </div>
+                <React.Fragment>
+                    {/* 상단 브랜드 로고 (취뽀 퀵) */}
+                    <div className="absolute top-10 left-5 z-50 pointer-events-none">
+                        <h1 className="text-3xl font-black italic tracking-tighter drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                            <span className="text-red-500">취뽀</span>
+                            <span className="text-white ml-0.5">퀵</span>
+                        </h1>
+                    </div>
+                    
+                    <div 
+                        ref={containerRef} 
+                        onScroll={handleScroll}
+                        className="h-full w-full overflow-y-scroll snap-y snap-mandatory scroll-smooth no-scrollbar relative"
+                    >
+                        {displayShorts.map((short, index) => <ShortItem key={`${short.id}-${index}`} data={short} showToast={showToast} />)}
+                    </div>
+                </React.Fragment>
             );
         }
 
